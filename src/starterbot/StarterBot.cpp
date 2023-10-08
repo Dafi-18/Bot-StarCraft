@@ -7,6 +7,9 @@ StarterBot::StarterBot()
     
 }
 
+// ESTE ES EL PRIMER INTENTO :D 
+// Como puedohacer un push??
+// 
 // Called when the bot starts!
 void StarterBot::onStart()
 {
