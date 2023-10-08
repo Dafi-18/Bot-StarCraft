@@ -29,6 +29,15 @@ void StarterBot::onFrame()
 {
     // Update our MapTools information
     m_mapTools.onFrame();
+    auto& units = BWAPI::Broodwar->getAllUnits();
+    for (auto u : units)
+    {
+        BWAPI::Position pos_u = u->getPosition();
+        std::string posStr = "(" + std::to_string(pos_u.x) + ", " + std::to_string(pos_u.y) + ")";
+        const char* posCStr = posStr.c_str();
+
+        BWAPI::Broodwar->drawTextMap(u->getPosition(), "%s", posCStr);
+    }
 
     // Send our idle workers to mine minerals so they don't just stand there
     sendIdleWorkersToMinerals();
@@ -38,6 +47,11 @@ void StarterBot::onFrame()
 
     // Build more supply if we are going to run out soon
     buildAdditionalSupply();
+
+    // Build a barrack or a gateway
+    buildBasicArmyBuilding();
+
+    trainInfantery();
 
     // Draw unit health bars, which brood war unfortunately does not do
     Tools::DrawUnitHealthBars();
@@ -86,11 +100,13 @@ void StarterBot::trainAdditionalWorkers()
 // Build more supply if we are going to run out soon
 void StarterBot::buildAdditionalSupply()
 {
+    const int currentSupply = Tools::GetTotalSupply(true);
+
     // Get the amount of supply supply we currently have unused
     const int unusedSupply = Tools::GetTotalSupply(true) - BWAPI::Broodwar->self()->supplyUsed();
 
     // If we have a sufficient amount of supply, we don't need to do anything
-    if (unusedSupply >= 2) { return; }
+    if (unusedSupply >= (2 * (1 + currentSupply / 15))) { return; }
 
     // Otherwise, we are going to build a supply provider
     const BWAPI::UnitType supplyProviderType = BWAPI::Broodwar->self()->getRace().getSupplyProvider();
@@ -99,6 +115,50 @@ void StarterBot::buildAdditionalSupply()
     if (startedBuilding)
     {
         BWAPI::Broodwar->printf("Started Building %s", supplyProviderType.getName().c_str());
+    }
+}
+
+void StarterBot::trainInfantery()
+{
+    const BWAPI::UnitType infanteryType = BWAPI::Broodwar->self()->getRace().getInfantery();
+
+    const BWAPI::UnitType buildingType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    const int requiredMinerals = infanteryType.mineralPrice();
+
+    if (minerals < requiredMinerals) { return; }
+
+    // get the unit pointer to my basic Army Building (hatchery, barracks or gateway)
+    const BWAPI::Unit myArmyBuilding = Tools::GetAvailableTrainingBuilding(buildingType);
+
+    // if we have a valid depot unit and it's currently not training something, train a worker
+    // there is no reason for a bot to ever use the unit queueing system, it just wastes resources
+    if (myArmyBuilding) { myArmyBuilding->train(infanteryType); }
+}
+
+void StarterBot::buildBasicArmyBuilding()
+{
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    // Obtener el tipo de edificio (UnitType)
+    const BWAPI::UnitType buildingType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+    // Para construir este edificio tengo que tener minerales suficientes
+    // Obtener la cantidad de minerales
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+    const int requiredMinerales = buildingType.mineralPrice();
+    // Obtener la cantidad de edificios hasta el momento.
+    const int basicArmyBuildingsOwned = Tools::CountUnitsOfType(buildingType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+    if (minerals < requiredMinerales or basicArmyBuildingsOwned == 3) { return; }
+
+    const bool startedBuilding = Tools::BuildBuilding(buildingType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", buildingType.getName());
     }
 }
 

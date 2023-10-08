@@ -76,6 +76,11 @@ namespace BWAPI
       /// begin harvesting Vespene Gas.
       /// 
       /// @returns UnitType of the structure used to harvest gas.
+      
+      UnitType getInfantery() const;
+
+      UnitType getBasicArmyBuilding() const;
+
       UnitType getRefinery() const;
 
       /// <summary>Retrieves the default transport UnitType for this race that is used to transport ground 

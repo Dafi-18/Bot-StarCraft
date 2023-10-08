@@ -47,6 +47,23 @@ namespace BWAPI
       Unknown, None, Unknown // random, none, unk
     };
 
+    // INFANTERY TYPES
+    static const int infanteryTypes[Races::Enum::MAX] =
+    {
+      Zerg_Zergling, Terran_Marine, Protoss_Zealot,
+      None, None, None, // unused
+      Unknown, None, Unknown // random, none, unk
+    };
+
+
+    // BASIC ARMY BUILDING TYPES
+    static const int basicArmyBuildingTypes[Races::Enum::MAX] =
+    {
+      Zerg_Spawning_Pool, Terran_Barracks, Protoss_Gateway,
+      None, None, None, // unused
+      Unknown, None, Unknown // random, none, unk
+    };
+
     // TRANSPORT TYPES
     static const int transportTypes[Races::Enum::MAX] =
     {
@@ -76,6 +93,14 @@ namespace BWAPI
   UnitType Race::getResourceDepot() const
   {
     return RaceInternal::baseTypes[this->getID()];
+  }
+  UnitType Race::getInfantery() const
+  {
+      return RaceInternal::infanteryTypes[this->getID()];
+  }
+  UnitType Race::getBasicArmyBuilding() const
+  {
+      return RaceInternal::basicArmyBuildingTypes[this->getID()];
   }
   UnitType Race::getCenter() const
   {

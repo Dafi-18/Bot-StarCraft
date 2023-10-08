@@ -57,6 +57,22 @@ BWAPI::Unit Tools::GetDepot()
     return GetUnitOfType(depot);
 }
 
+BWAPI::Unit Tools::GetAvailableTrainingBuilding(BWAPI::UnitType type)
+{
+    // For each unit that we own
+    for (auto& unit : BWAPI::Broodwar->self()->getUnits())
+    {
+        // if the unit is of the correct type, and it actually has been constructed, return it
+        if (unit->getType() == type && unit->isCompleted() && !unit->isTraining())
+        {
+            return unit;
+        }
+    }
+
+    // If we didn't find a valid unit to return, make sure we return nullptr
+    return nullptr;
+}
+
 // Attempt tp construct a building of a given type 
 bool Tools::BuildBuilding(BWAPI::UnitType type)
 {

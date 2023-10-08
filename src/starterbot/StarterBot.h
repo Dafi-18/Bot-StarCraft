@@ -17,6 +17,8 @@ public:
     void trainAdditionalWorkers();
     void buildAdditionalSupply();
     void drawDebugInformation();
+	void trainInfantery();
+	void buildBasicArmyBuilding();
 
     // functions that are triggered by various BWAPI events from main.cpp
 	void onStart();
