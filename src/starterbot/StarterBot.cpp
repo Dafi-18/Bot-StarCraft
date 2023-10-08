@@ -51,6 +51,8 @@ void StarterBot::onFrame()
     // Build a barrack or a gateway
     buildBasicArmyBuilding();
 
+    buildAssimilator();
+
     trainInfantery();
 
     //Attack Zealots
@@ -162,6 +164,30 @@ void StarterBot::buildBasicArmyBuilding()
     if (startedBuilding)
     {
         BWAPI::Broodwar->printf("Started Building %s", buildingType.getName());
+    }
+}
+
+void StarterBot::buildAssimilator()
+{
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    // Obtener el tipo de edificio (UnitType)
+    const BWAPI::UnitType refineryType = BWAPI::Broodwar->self()->getRace().getRefinery();
+    // Para construir este edificio tengo que tener minerales suficientes
+    // Obtener la cantidad de minerales
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+    const int requiredMinerales = refineryType.mineralPrice();
+    // Obtener la cantidad de edificios hasta el momento.
+    const int refineryOwned = Tools::CountUnitsOfType(refineryType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+    if (minerals < requiredMinerales or refineryOwned == 1) { return; }
+
+    const bool startedBuilding = Tools::BuildBuilding(refineryType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", refineryType.getName());
     }
 }
 

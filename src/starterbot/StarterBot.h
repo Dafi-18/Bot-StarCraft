@@ -20,6 +20,7 @@ public:
 	void trainInfantery();
 	void buildBasicArmyBuilding();
 	void AttackZealots();
+	void buildAssimilator();
 
     // functions that are triggered by various BWAPI events from main.cpp
 	void onStart();
