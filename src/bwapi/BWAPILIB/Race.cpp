@@ -47,13 +47,29 @@ namespace BWAPI
       Unknown, None, Unknown // random, none, unk
     };
 
-    // INFANTERY TYPES
+    // INFANTERY basic TYPES
     static const int infanteryTypes[Races::Enum::MAX] =
     {
       Zerg_Zergling, Terran_Marine, Protoss_Zealot,
       None, None, None, // unused
       Unknown, None, Unknown // random, none, unk
     };
+
+    // DEFENSE basic TYPES
+    static const int defenseTypes[Races::Enum::MAX] =
+    {
+     Zerg_Sunken_Colony, Terran_Bunker, Protoss_Photon_Cannon,
+      None, None, None, // unused
+      Unknown, None, Unknown // random, none, unk0
+    };
+
+    // Second Infantery TYPES
+    static const int dragonTypes[Races::Enum::MAX] = 
+    {
+		Zerg_Hydralisk, Terran_Firebat, Protoss_Dragoon,
+		None, None, None, // unused
+		Unknown, None, Unknown // random, none, unk
+	};
 
 
     // BASIC ARMY BUILDING TYPES
