@@ -54,7 +54,11 @@ void StarterBot::onFrame()
     // Build para extraer gas vespeno
     buildAssimilator();
 
+    sendIdleWorkersToGas();
+
     trainInfantery();
+
+    buildUpdateBasic();
 
     //Attack Zealots
     AttackZealots();
@@ -86,6 +90,24 @@ void StarterBot::sendIdleWorkersToMinerals()
     }
 }
 
+void StarterBot::sendIdleWorkersToGas()
+{
+    // Let's send all of our starting workers to the closest mineral to them
+    // First we need to loop over all of the units that we (BWAPI::Broodwar->self()) own
+    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
+    for (auto& unit : myUnits)
+    {
+        // Check the unit type, if it is an idle worker, then we want to send it somewhere
+        if (unit->getType().isWorker() && unit->isIdle())
+        {
+            // Get the closest mineral to this worker unit
+            BWAPI::Unit closestGas = Tools::GetClosestUnitTo(unit, BWAPI::Broodwar->getGeysers());
+
+            // If a valid mineral was found, right click it with the unit in order to start harvesting
+            if (closestGas) { unit->rightClick(closestGas); }
+        }
+    }
+}
 // Train more workers so we can gather more income
 void StarterBot::trainAdditionalWorkers()
 {
@@ -126,7 +148,7 @@ void StarterBot::buildAdditionalSupply()
 
 void StarterBot::trainInfantery()
 {
-    const BWAPI::UnitType infanteryType = BWAPI::Broodwar->self()->getRace().getInfantery();
+    const BWAPI::UnitType infanteryType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
 
     const BWAPI::UnitType buildingType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
 
@@ -168,6 +190,30 @@ void StarterBot::buildBasicArmyBuilding()
     }
 }
 
+void StarterBot::buildUpdateBasic()
+{
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    // Obtener el tipo de edificio (UnitType)
+    const BWAPI::UnitType buildingType = BWAPI::Broodwar->self()->getRace().getUpdateBasic();
+    // Para construir este edificio tengo que tener minerales suficientes
+    // Obtener la cantidad de minerales
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+    const int requiredMinerales = buildingType.mineralPrice();
+    // Obtener la cantidad de edificios hasta el momento.
+    const int updateBasicOwned = Tools::CountUnitsOfType(buildingType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+    if (minerals < requiredMinerales or updateBasicOwned == 1) { return; }
+
+    const bool startedBuilding = Tools::BuildBuilding(buildingType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", buildingType.getName());
+    }
+}
+
 void StarterBot::buildAssimilator()
 {
     const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
@@ -189,6 +235,7 @@ void StarterBot::buildAssimilator()
     if (startedBuilding)
     {
         BWAPI::Broodwar->printf("Started Building %s", refineryType.getName());
+     
     }
 }
 

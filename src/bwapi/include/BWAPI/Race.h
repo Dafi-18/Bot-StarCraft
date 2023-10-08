@@ -76,10 +76,16 @@ namespace BWAPI
       /// begin harvesting Vespene Gas.
       /// 
       /// @returns UnitType of the structure used to harvest gas.
-      
-      UnitType getInfantery() const;
+
+      UnitType getInfanteryBasic() const;
+
+      UnitType getDefenseBasic() const;
+
+      UnitType getSecondInfantery() const;
 
       UnitType getBasicArmyBuilding() const;
+
+      UnitType getUpdateBasic() const;
 
       UnitType getRefinery() const;
 

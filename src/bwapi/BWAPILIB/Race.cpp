@@ -95,6 +95,14 @@ namespace BWAPI
       None, None, None, // unused
       Unknown, None, Unknown // random, none, unk
     };
+
+    // UPDATE BASIC TYPES
+    static const int updateBasicTypes[Races::Enum::MAX] = 
+    {
+	  Zerg_Lair, Terran_Academy, Protoss_Cybernetics_Core,
+	  None, None, None, // unused
+	  Unknown, None, Unknown // random, none, unk
+	};
   };// end local scope
 
   namespace RaceSet
@@ -110,13 +118,25 @@ namespace BWAPI
   {
     return RaceInternal::baseTypes[this->getID()];
   }
-  UnitType Race::getInfantery() const
+  UnitType Race::getInfanteryBasic() const
   {
       return RaceInternal::infanteryTypes[this->getID()];
+  }
+  UnitType Race::getDefenseBasic() const
+  {
+      return RaceInternal::defenseTypes[this->getID()];
+  }
+  UnitType Race::getSecondInfantery() const
+  {
+      return RaceInternal::dragonTypes[this->getID()];
   }
   UnitType Race::getBasicArmyBuilding() const
   {
       return RaceInternal::basicArmyBuildingTypes[this->getID()];
+  }
+  UnitType Race::getUpdateBasic() const
+  {
+	  return RaceInternal::updateBasicTypes[this->getID()];
   }
   UnitType Race::getCenter() const
   {
