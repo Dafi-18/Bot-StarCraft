@@ -22,7 +22,9 @@ public:
 	void buildUpdateBasic();
 	void AttackZealots();
 	void buildAssimilator();
-	void sendIdleWorkersToGas();
+	void sendIdleWorkersToRefineries();
+
+
 
     // functions that are triggered by various BWAPI events from main.cpp
 	void onStart();
