@@ -54,7 +54,7 @@ void StarterBot::onFrame()
     // Build para extraer gas vespeno
     buildAssimilator();
 
-    sendIdleWorkersToGas();
+    sendIdleWorkersToRefineries();
 
     trainInfantery();
 
@@ -73,38 +73,81 @@ void StarterBot::onFrame()
 // Send our idle workers to mine minerals so they don't just stand there
 void StarterBot::sendIdleWorkersToMinerals()
 {
-    // Let's send all of our starting workers to the closest mineral to them
-    // First we need to loop over all of the units that we (BWAPI::Broodwar->self()) own
+    int freeWorkers = 3;
+    int idleWorkers = 0;
+
+    // Contar el número de obreros inactivos
     const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
     for (auto& unit : myUnits)
     {
-        // Check the unit type, if it is an idle worker, then we want to send it somewhere
         if (unit->getType().isWorker() && unit->isIdle())
         {
-            // Get the closest mineral to this worker unit
-            BWAPI::Unit closestMineral = Tools::GetClosestUnitTo(unit, BWAPI::Broodwar->getMinerals());
+            idleWorkers++;
+        }
+    }
 
-            // If a valid mineral was found, right click it with the unit in order to start harvesting
-            if (closestMineral) { unit->rightClick(closestMineral); }
+    // Si tenemos más de tres obreros inactivos, enviar a los obreros a los minerales
+    if (idleWorkers > freeWorkers)
+    {
+        for (auto& unit : myUnits)
+        {
+            // Si la unidad es un obrero y está inactiva, enviarla a extraer minerales
+            if (unit->getType().isWorker() && unit->isIdle())
+            {
+                // Obtener el mineral más cercano a esta unidad obrera
+                BWAPI::Unit closestMineral = Tools::GetClosestUnitTo(unit, BWAPI::Broodwar->getMinerals());
+
+                // Si se encontró un mineral válido, hacer clic derecho en él con la unidad para comenzar a recolectar
+                if (closestMineral) { unit->rightClick(closestMineral); }
+
+                // Disminuir el contador de obreros inactivos
+                idleWorkers--;
+
+                // Si ya hemos enviado suficientes obreros a los minerales, salir del bucle
+                if (idleWorkers <= freeWorkers)
+                {
+                    break;
+                }
+            }
         }
     }
 }
 
-void StarterBot::sendIdleWorkersToGas()
+void StarterBot::sendIdleWorkersToRefineries()
 {
-    // Let's send all of our starting workers to the closest mineral to them
-    // First we need to loop over all of the units that we (BWAPI::Broodwar->self()) own
-    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
-    for (auto& unit : myUnits)
+    int gasWorkers = 0;
+
+    // Iterar a través de todas nuestras unidades
+    for (auto& unit : BWAPI::Broodwar->self()->getUnits())
     {
-        // Check the unit type, if it is an idle worker, then we want to send it somewhere
+        // Si la unidad es un obrero y está inactiva, enviarla a extraer gas
         if (unit->getType().isWorker() && unit->isIdle())
         {
-            // Get the closest mineral to this worker unit
-            BWAPI::Unit closestGas = Tools::GetClosestUnitTo(unit, BWAPI::Broodwar->getGeysers());
+            // Si ya tenemos 3 obreros extrayendo gas, no enviar más
+            if (gasWorkers >= 3)
+            {
+                break;
+            }
 
-            // If a valid mineral was found, right click it with the unit in order to start harvesting
-            if (closestGas) { unit->rightClick(closestGas); }
+            // Buscar la refinería más cercana
+            BWAPI::Unit closestRefinery = nullptr;
+            for (auto& u : BWAPI::Broodwar->self()->getUnits())
+            {
+                if (u->getType().isRefinery())
+                {
+                    if (closestRefinery == nullptr || unit->getDistance(u) < unit->getDistance(closestRefinery))
+                    {
+                        closestRefinery = u;
+                    }
+                }
+            }
+
+            // Si encontramos una refinería, enviar al obrero a extraer gas
+            if (closestRefinery != nullptr)
+            {
+                unit->gather(closestRefinery);
+                gasWorkers++;
+            }
         }
     }
 }
