@@ -89,11 +89,6 @@ void StarterBot::sendIdleWorkersToMinerals()
             }
         }
     }
-    else
-    {
-        // Ya tenemos una refinería, enviar solo tres obreros a recolectar gas
-        sendIdleWorkersToRefineries();
-    }
 }
 
 
