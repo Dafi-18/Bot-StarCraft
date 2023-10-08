@@ -23,6 +23,7 @@ public:
 	void AttackZealots();
 	void buildAssimilator();
 	void sendIdleWorkersToRefineries();
+	void trainDragoons();
 
 
 

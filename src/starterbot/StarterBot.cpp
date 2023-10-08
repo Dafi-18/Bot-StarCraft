@@ -56,6 +56,8 @@ void StarterBot::onFrame()
 
     sendIdleWorkersToRefineries();
 
+    trainDragoons();
+
     trainInfantery();
 
     buildUpdateBasic();
@@ -73,16 +75,35 @@ void StarterBot::onFrame()
 // Send our idle workers to mine minerals so they don't just stand there
 void StarterBot::sendIdleWorkersToMinerals()
 {
-    // Verificar si ya tenemos una refinería
+    const int maxGasWorkers = 3; // Máximo de trabajadores en las refinerías
+
+    // Contar la cantidad de trabajadores en las refinerías
+    int gasWorkers = 0;
+    for (auto& unit : BWAPI::Broodwar->self()->getUnits())
+    {
+        if (unit->getType().isWorker() && unit->isGatheringGas())
+        {
+            gasWorkers++;
+        }
+    }
+
+    // Verificar si ya hemos construido al menos una refinería
     const int refineryCount = Tools::CountUnitsOfType(BWAPI::UnitTypes::Protoss_Assimilator, BWAPI::Broodwar->self()->getUnits());
 
-    if (refineryCount == 0)
+    // Iterar a través de todas nuestras unidades
+    for (auto& unit : BWAPI::Broodwar->self()->getUnits())
     {
-        // No tenemos refinerías, enviar todos los obreros a recolectar minerales
-        const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
-        for (auto& unit : myUnits)
+        // Si la unidad es un obrero y está inactiva, enviarla a recolectar minerales
+        if (unit->getType().isWorker() && unit->isIdle())
         {
-            if (unit->getType().isWorker() && unit->isIdle())
+            // Si aún no hemos construido ninguna refinería, enviar a los obreros a recolectar minerales
+            if (refineryCount == 0)
+            {
+                BWAPI::Unit closestMineral = Tools::GetClosestUnitTo(unit, BWAPI::Broodwar->getMinerals());
+                if (closestMineral) { unit->rightClick(closestMineral); }
+            }
+            // Si ya tenemos suficientes obreros extrayendo gas, enviarlos a recolectar minerales
+            else if (gasWorkers >= maxGasWorkers)
             {
                 BWAPI::Unit closestMineral = Tools::GetClosestUnitTo(unit, BWAPI::Broodwar->getMinerals());
                 if (closestMineral) { unit->rightClick(closestMineral); }
@@ -90,6 +111,8 @@ void StarterBot::sendIdleWorkersToMinerals()
         }
     }
 }
+
+
 
 
 void StarterBot::sendIdleWorkersToRefineries()
@@ -201,6 +224,32 @@ void StarterBot::trainInfantery()
     // there is no reason for a bot to ever use the unit queueing system, it just wastes resources
     if (myArmyBuilding) { myArmyBuilding->train(infanteryType); }
 }
+
+void StarterBot::trainDragoons()
+{
+    const BWAPI::UnitType dragoonType = BWAPI::Broodwar->self()->getRace().getSecondInfantery();
+    const BWAPI::UnitType gatewayType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+
+    // Verificar recursos disponibles
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+    const int gas = BWAPI::Broodwar->self()->gas();
+
+    const int requiredMinerals = dragoonType.mineralPrice();
+    const int requiredGas = dragoonType.gasPrice();
+
+
+    // Check if you have enough resources to train a dragoon
+    if (minerals >= requiredMinerals && gas >= requiredGas) {
+        // Find a gateway that can train dragoons
+        BWAPI::Unit myGateway = Tools::GetAvailableTrainingBuilding(gatewayType);
+
+        // If you have a valid gateway, train a dragoon
+        if (myGateway && !myGateway->isTraining()) {
+            myGateway->train(dragoonType);
+        }
+    }
+}
+
 
 void StarterBot::buildBasicArmyBuilding()
 {
