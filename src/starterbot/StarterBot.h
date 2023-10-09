@@ -21,6 +21,7 @@ public:
 	void buildBasicArmyBuilding();
 	void buildUpdateBasic();
 	void AttackZealots();
+	void AttackDragoons();
 	void buildAssimilator();
 	void sendIdleWorkersToRefineries();
 	void trainDragoons();

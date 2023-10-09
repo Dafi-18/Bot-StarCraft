@@ -58,16 +58,19 @@ void StarterBot::onFrame()
 
     buildForge();
 
-    trainDragoons();
+    buildUpdateBasic();
 
-    buildPhotonCannon();
+    trainDragoons();
 
     trainInfantery();
 
-    buildUpdateBasic();
+    buildPhotonCannon();
 
     //Attack Zealots
     AttackZealots();
+
+    //Attack Dragoons
+    AttackDragoons();
 
     // Draw unit health bars, which brood war unfortunately does not do
     Tools::DrawUnitHealthBars();
@@ -236,7 +239,6 @@ void StarterBot::trainDragoons()
     const BWAPI::UnitType zealotType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
 
 
-
     // Verificar recursos disponibles
     const int minerals = BWAPI::Broodwar->self()->minerals();
     const int gas = BWAPI::Broodwar->self()->gas();
@@ -284,27 +286,25 @@ void StarterBot::buildBasicArmyBuilding()
 
 void StarterBot::buildUpdateBasic()
 {
-    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
-    // Obtener el tipo de edificio (UnitType)
-    const BWAPI::UnitType buildingType = BWAPI::Broodwar->self()->getRace().getUpdateBasic();
-    // Para construir este edificio tengo que tener minerales suficientes
-    // Obtener la cantidad de minerales
+    const BWAPI::UnitType coreType = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
     const int minerals = BWAPI::Broodwar->self()->minerals();
 
-    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
-    const int requiredMinerales = buildingType.mineralPrice();
-    // Obtener la cantidad de edificios hasta el momento.
-    const int updateBasicOwned = Tools::CountUnitsOfType(buildingType, BWAPI::Broodwar->self()->getUnits());
+    // Verificar si ya tienes una Cibernética Core construida
+    const int cyberneticsCoreCount = Tools::CountUnitsOfType(coreType, BWAPI::Broodwar->self()->getUnits());
 
-    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
-    if (minerals < requiredMinerales or updateBasicOwned == 1) { return; }
+    // Si no tienes suficientes minerales o ya tienes una Cibernética Core, no hagas nada.
+    if (minerals < coreType.mineralPrice() || cyberneticsCoreCount == 1) {
+        return;
+    }
 
-    const bool startedBuilding = Tools::BuildBuilding(buildingType);
+    const bool startedBuilding = Tools::BuildBuilding(coreType);
     if (startedBuilding)
     {
-        BWAPI::Broodwar->printf("Started Building %s", buildingType.getName());
+        BWAPI::Broodwar->printf("Started Building %s", coreType.getName());
     }
 }
+
+
 
 void StarterBot::buildAssimilator()
 {
@@ -443,6 +443,83 @@ void StarterBot::AttackZealots()
             {
                 BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
                 unit->rightClick(BWAPI::Position(myBaseTile));
+                BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+
+                if (closestEnemy) {
+                    unit->attack(closestEnemy, true);
+                }
+            }
+        }
+    }
+}
+
+void StarterBot::AttackDragoons()
+{
+    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
+    const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+
+    static int dragoonCount = 0; // Contador total de Zealots que han atacado
+    static int aliveDragoonCount = 0; // Contador de Zealots vivos en el grupo actual
+    static int DragoonsSentToAttack = 0; // Contador de Zealots enviados a atacar
+
+    // Encuentra las coordenadas de inicio del enemigo (simétricas)
+    static BWAPI::TilePosition tilestartLocation = BWAPI::Broodwar->self()->getStartLocation();
+    static BWAPI::Position startLocation(tilestartLocation); // Posición de inicio
+    static BWAPI::Position enemyBase;
+    static bool enemyBaseSet = false;
+
+    if (!enemyBaseSet) {
+        double maxDistance = 0;
+        double distance1 = startLocation.getDistance(BWAPI::Position(320, 3264));
+        double distance2 = startLocation.getDistance(BWAPI::Position(3264, 320));
+
+        if (distance1 > distance2) {
+            enemyBase = BWAPI::Position(320, 3264);
+        }
+        else {
+            enemyBase = BWAPI::Position(3264, 320);
+        }
+        enemyBaseSet = true;
+    }
+
+    // Contador de Zealots vivos en el grupo actual
+    int aliveDragoonsInGroup = 0;
+
+    // Realiza el movimiento y el ataque
+    for (auto& unit : myUnits)
+    {
+        if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon)
+        {
+            // Verifica si hay enemigos en el camino hacia la posición
+            BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+
+            if (closestEnemy) {
+                unit->attack(closestEnemy, true);
+            }
+            else {
+                unit->attack(enemyBase, true);
+            }
+
+            // Contador de Zealots vivos en el grupo actual
+            if (unit->exists()) {
+                aliveDragoonsInGroup++;
+            }
+        }
+    }
+
+    // Si no hay suficientes Zealots vivos en el grupo, agrúpalos en tu base
+    if (aliveDragoonsInGroup < 10) {
+        for (auto& unit : myUnits)
+        {
+            if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon && !unit->isAttacking())
+            {
+                BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
+                unit->rightClick(BWAPI::Position(myBaseTile));
+                BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+
+                if (closestEnemy) {
+                    unit->attack(closestEnemy, true);
+                }
             }
         }
     }
