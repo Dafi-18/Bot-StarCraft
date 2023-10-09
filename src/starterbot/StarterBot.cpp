@@ -230,6 +230,9 @@ void StarterBot::trainDragoons()
 {
     const BWAPI::UnitType dragoonType = BWAPI::Broodwar->self()->getRace().getSecondInfantery();
     const BWAPI::UnitType gatewayType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+    const BWAPI::UnitType zealotType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
+
+
 
     // Verificar recursos disponibles
     const int minerals = BWAPI::Broodwar->self()->minerals();
