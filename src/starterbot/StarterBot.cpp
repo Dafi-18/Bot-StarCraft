@@ -56,6 +56,12 @@ void StarterBot::onFrame()
 
     sendIdleWorkersToRefineries();
 
+    buildForge();
+
+    trainDragoons();
+
+    buildPhotonCannon();
+
     trainInfantery();
 
     buildUpdateBasic();
@@ -109,6 +115,8 @@ void StarterBot::sendIdleWorkersToMinerals()
         }
     }
 }
+
+
 
 
 void StarterBot::sendIdleWorkersToRefineries()
@@ -221,6 +229,35 @@ void StarterBot::trainInfantery()
     if (myArmyBuilding) { myArmyBuilding->train(infanteryType); }
 }
 
+void StarterBot::trainDragoons()
+{
+    const BWAPI::UnitType dragoonType = BWAPI::Broodwar->self()->getRace().getSecondInfantery();
+    const BWAPI::UnitType gatewayType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+    const BWAPI::UnitType zealotType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
+
+
+
+    // Verificar recursos disponibles
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+    const int gas = BWAPI::Broodwar->self()->gas();
+
+    const int requiredMinerals = dragoonType.mineralPrice();
+    const int requiredGas = dragoonType.gasPrice();
+
+
+    // Check if you have enough resources to train a dragoon
+    if (minerals >= requiredMinerals && gas >= requiredGas) {
+        // Find a gateway that can train dragoons
+        BWAPI::Unit myGateway = Tools::GetAvailableTrainingBuilding(gatewayType);
+
+        // If you have a valid gateway, train a dragoon
+        if (myGateway && !myGateway->isTraining()) {
+            myGateway->train(dragoonType);
+        }
+    }
+}
+
+
 void StarterBot::buildBasicArmyBuilding()
 {
     const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
@@ -291,6 +328,56 @@ void StarterBot::buildAssimilator()
     {
         BWAPI::Broodwar->printf("Started Building %s", refineryType.getName());
      
+    }
+}
+
+void StarterBot::buildPhotonCannon()
+{
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    // Obtener el tipo de edificio (UnitType)
+    const BWAPI::UnitType defenseType = BWAPI::Broodwar->self()->getRace().getDefenseBasic();
+    // Para construir este edificio tengo que tener minerales suficientes
+    // Obtener la cantidad de minerales
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+    const int requiredMinerales = defenseType.mineralPrice();
+    // Obtener la cantidad de edificios hasta el momento.
+    const int defenseOwned = Tools::CountUnitsOfType(defenseType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+    if (minerals < requiredMinerales or defenseOwned == 2) { return; }
+
+    const bool startedBuilding = Tools::BuildBuilding(defenseType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", defenseType.getName());
+
+    }
+}
+
+void StarterBot::buildForge()
+{
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    // Obtener el tipo de edificio (UnitType)
+    const BWAPI::UnitType forgeType = BWAPI::Broodwar->self()->getRace().getFirstUpdate();
+    // Para construir este edificio tengo que tener minerales suficientes
+    // Obtener la cantidad de minerales
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+    const int requiredMinerales = forgeType.mineralPrice();
+    // Obtener la cantidad de edificios hasta el momento.
+    const int ForgeOwned = Tools::CountUnitsOfType(forgeType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+    if (minerals < requiredMinerales or ForgeOwned == 1) { return; }
+
+    const bool startedBuilding = Tools::BuildBuilding(forgeType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", forgeType.getName());
+
     }
 }
 
