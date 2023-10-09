@@ -60,6 +60,12 @@ void StarterBot::onFrame()
 
     buildUpdateBasic();
 
+    buildSecondUpdate();
+
+    buildTemplarArchives();
+
+    trainTemplars();
+
     trainDragoons();
 
     trainInfantery();
@@ -71,6 +77,8 @@ void StarterBot::onFrame()
 
     //Attack Dragoons
     AttackDragoons();
+
+    AttackTemplars();
 
     // Reset attack logic if needed
     ResetAttackLogicIfNeeded();
@@ -239,7 +247,7 @@ void StarterBot::trainDragoons()
     const BWAPI::UnitType gatewayType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
 
     const BWAPI::UnitType zealogsType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
-    const int zealogsWanted = 15;
+    const int zealogsWanted = 10;
     const int zealogsOwned = Tools::CountUnitsOfType(zealogsType, BWAPI::Broodwar->self()->getUnits());
 
 
@@ -265,6 +273,38 @@ void StarterBot::trainDragoons()
     }
 }
 
+void StarterBot::trainTemplars()
+{
+    const BWAPI::UnitType templarType = BWAPI::Broodwar->self()->getRace().getThreeInfantery();
+    const BWAPI::UnitType gatewayType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+
+    const BWAPI::UnitType dragonsType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
+    const int dragonWanted = 5;
+    const int dragonOwned = Tools::CountUnitsOfType(dragonsType, BWAPI::Broodwar->self()->getUnits());
+
+
+    if (dragonWanted < dragonOwned) {
+        // Verificar recursos disponibles
+        const int minerals = BWAPI::Broodwar->self()->minerals();
+        const int gas = BWAPI::Broodwar->self()->gas();
+
+        const int requiredMinerals = templarType.mineralPrice();
+        const int requiredGas = templarType.gasPrice();
+
+
+        // Check if you have enough resources to train a dragoon
+        if (minerals >= requiredMinerals && gas >= requiredGas) {
+            // Find a gateway that can train dragoons
+            BWAPI::Unit myGateway = Tools::GetAvailableTrainingBuilding(gatewayType);
+
+            // If you have a valid gateway, train a dragoon
+            if (myGateway && !myGateway->isTraining()) {
+                myGateway->train(templarType);
+            }
+        }
+    }
+}
+
 
 void StarterBot::buildBasicArmyBuilding()
 {
@@ -285,7 +325,7 @@ void StarterBot::buildBasicArmyBuilding()
     const int basicArmyBuildingsOwned = Tools::CountUnitsOfType(buildingType, BWAPI::Broodwar->self()->getUnits());
 
     // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
-    if (minerals < requiredMinerales or basicArmyBuildingsOwned == 4) { return; }
+    if (minerals < requiredMinerales or basicArmyBuildingsOwned == 3) { return; }
 
     const bool startedBuilding = Tools::BuildBuilding(buildingType);
     if (startedBuilding)
@@ -352,9 +392,49 @@ void StarterBot::buildAssimilator()
 
 }
 
+void StarterBot::buildSecondUpdate()
+{
+    const BWAPI::UnitType secondType = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    // Verificar si ya tienes una Cibernética Core construida
+    const int CitadelOfAdunCount = Tools::CountUnitsOfType(secondType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tienes suficientes minerales o ya tienes una Cibernética Core, no hagas nada.
+    if (minerals < secondType.mineralPrice() || CitadelOfAdunCount == 1) {
+        return;
+    }
+
+    const bool startedBuilding = Tools::BuildBuilding(secondType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", secondType.getName());
+    }
+}
+
+void StarterBot::buildTemplarArchives()
+{
+    const BWAPI::UnitType TemplarArchivesType = BWAPI::UnitTypes::Protoss_Templar_Archives;
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    // Verificar si ya tienes una Cibernética Core construida
+    const int CitadelOfAdunCount = Tools::CountUnitsOfType(TemplarArchivesType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tienes suficientes minerales o ya tienes una Cibernética Core, no hagas nada.
+    if (minerals < TemplarArchivesType.mineralPrice() || CitadelOfAdunCount == 1) {
+        return;
+    }
+
+    const bool startedBuilding = Tools::BuildBuilding(TemplarArchivesType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", TemplarArchivesType.getName());
+    }
+}
+
 void StarterBot::buildPhotonCannon()
 {
-    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    /* const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
     // Obtener el tipo de edificio (UnitType)
     const BWAPI::UnitType defenseType = BWAPI::Broodwar->self()->getRace().getDefenseBasic();
     // Para construir este edificio tengo que tener minerales suficientes
@@ -374,12 +454,12 @@ void StarterBot::buildPhotonCannon()
     {
         BWAPI::Broodwar->printf("Started Building %s", defenseType.getName());
 
-    }
+    }*/
 }
 
 void StarterBot::buildForge()
 {
-    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    /*const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
     // Obtener el tipo de edificio (UnitType)
     const BWAPI::UnitType forgeType = BWAPI::Broodwar->self()->getRace().getFirstUpdate();
     // Para construir este edificio tengo que tener minerales suficientes
@@ -399,7 +479,7 @@ void StarterBot::buildForge()
     {
         BWAPI::Broodwar->printf("Started Building %s", forgeType.getName());
 
-    }
+    }*/
 }
 
 void StarterBot::AttackZealots()
@@ -555,6 +635,83 @@ void StarterBot::AttackDragoons()
     }
 }
 
+void StarterBot::AttackTemplars()
+{
+    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
+    const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+
+    static int templarCount = 0; // Contador total de Zealots que han atacado
+    static int aliveTemplarCount = 0; // Contador de Zealots vivos en el grupo actual
+    static int TemplarsSentToAttack = 0; // Contador de Zealots enviados a atacar
+
+    // Encuentra las coordenadas de inicio del enemigo (simétricas)
+    static BWAPI::TilePosition tilestartLocation = BWAPI::Broodwar->self()->getStartLocation();
+    static BWAPI::Position startLocation(tilestartLocation); // Posición de inicio
+    static BWAPI::Position enemyBase;
+    static bool enemyBaseSet = false;
+
+    if (!enemyBaseSet) {
+        double maxDistance = 0;
+        double distance1 = startLocation.getDistance(BWAPI::Position(320, 3264));
+        double distance2 = startLocation.getDistance(BWAPI::Position(3264, 320));
+
+        if (distance1 > distance2) {
+            enemyBase = BWAPI::Position(320, 3264);
+        }
+        else {
+            enemyBase = BWAPI::Position(3264, 320);
+        }
+        enemyBaseSet = true;
+    }
+
+    // Contador de Zealots vivos en el grupo actual
+    const BWAPI::UnitType templarsType = BWAPI::Broodwar->self()->getRace().getThreeInfantery();
+    const int aliveTemplarsInGroup = Tools::CountUnitsOfType(templarsType, BWAPI::Broodwar->self()->getUnits());
+
+    // Realiza el movimiento y el ataque
+    for (auto& unit : myUnits)
+    {
+        if (unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar)
+        {
+            // Verifica si hay enemigos en el camino hacia la posición
+            const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+            BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+
+            if (closestEnemy) {
+                unit->attack(closestEnemy, true);
+            }
+            else {
+                unit->attack(enemyBase, true);
+            }
+
+        }
+    }
+
+    // Si no hay suficientes Zealots vivos en el grupo, agrúpalos en tu base
+    if (aliveTemplarsInGroup < 2) {
+        for (auto& unit : myUnits)
+        {
+            if (unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar) {
+
+                if (!unit->isAttacking()) {
+                    BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
+                    unit->rightClick(BWAPI::Position(myBaseTile));;
+                }
+                else
+                {
+                    const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+                    BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+                    if (closestEnemy) {
+                        unit->attack(closestEnemy, true);
+                    }
+
+                }
+            }
+
+        }
+    }
+}
+
 void StarterBot::ResetAttackLogicIfNeeded()
 {
     // Definir una ubicación específica de la base enemiga a la que deseas enviar tus unidades
@@ -584,14 +741,16 @@ void StarterBot::ResetAttackLogicIfNeeded()
     const BWAPI::UnitType dragoonsType = BWAPI::Broodwar->self()->getRace().getSecondInfantery();
     const int aliveDragoons = Tools::CountUnitsOfType(dragoonsType, BWAPI::Broodwar->self()->getUnits());
 
+    const BWAPI::UnitType templarsType = BWAPI::Broodwar->self()->getRace().getThreeInfantery();
+    const int aliveTemplars = Tools::CountUnitsOfType(templarsType, BWAPI::Broodwar->self()->getUnits());
     // Si tienes 20 o más unidades entre Zealots y Dragoons y no se ha dado la orden,
     // envía las unidades a la ubicación de la base enemiga y marca la bandera como verdadera
-    if (aliveZealots + aliveDragoons >= 20)
+    if (aliveZealots + aliveDragoons + aliveTemplars >= 20)
     {
         // Mueve las unidades a la ubicación de la base enemiga
         for (auto& unit : BWAPI::Broodwar->self()->getUnits())
         {
-            if (unit->getType() == zealotsType || unit->getType() == dragoonsType)
+            if (unit->getType() == zealotsType || unit->getType() == dragoonsType || unit->getType() == templarsType)
             {
                 unit->attack(enemyBase);
             }

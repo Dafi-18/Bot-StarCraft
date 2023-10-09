@@ -27,7 +27,11 @@ public:
 	void trainDragoons();
 	void buildForge();
 	void buildPhotonCannon();
+	void buildSecondUpdate();
 	void ResetAttackLogicIfNeeded();
+	void AttackTemplars();
+	void buildTemplarArchives();
+	void trainTemplars();
 
 
 

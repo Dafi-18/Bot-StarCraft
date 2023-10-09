@@ -79,6 +79,13 @@ namespace BWAPI
 		Unknown, None, Unknown // random, none, unk
 	};
 
+    // Second Infantery TYPES
+    static const int threeInfanteryTypes[Races::Enum::MAX] =
+    {
+        Zerg_Lurker, Terran_Medic, Protoss_Dark_Templar,
+        None, None, None, // unused
+        Unknown, None, Unknown // random, none, unk
+    };
 
     // BASIC ARMY BUILDING TYPES
     static const int basicArmyBuildingTypes[Races::Enum::MAX] =
@@ -111,6 +118,22 @@ namespace BWAPI
 	  None, None, None, // unused
 	  Unknown, None, Unknown // random, none, unk
 	};
+
+    // SECOND UPDATE TYPES
+    static const int secondUpdateTypes[Races::Enum::MAX] =
+    {
+      Zerg_Hydralisk_Den, Terran_Factory, Protoss_Citadel_of_Adun,
+      None, None, None, // unused
+      Unknown, None, Unknown // random, none, unk
+    };
+
+    // BUILD TEMPLAR TYPES
+    static const int buildTemplarTypes[Races::Enum::MAX] =
+    {
+      Zerg_Mutalisk, Terran_Dropship, Protoss_Templar_Archives,
+      None, None, None, // unused
+      Unknown, None, Unknown // random, none, unk
+    };
   };// end local scope
 
   namespace RaceSet
@@ -142,9 +165,21 @@ namespace BWAPI
   {
       return RaceInternal::dragonTypes[this->getID()];
   }
+  UnitType Race::getThreeInfantery() const
+  {
+      return RaceInternal::threeInfanteryTypes[this->getID()];
+  }
   UnitType Race::getBasicArmyBuilding() const
   {
       return RaceInternal::basicArmyBuildingTypes[this->getID()];
+  }
+  UnitType Race::getBuildTemplar() const
+  {
+      return RaceInternal::buildTemplarTypes[this->getID()];
+  }
+  UnitType Race::getSecondUpdate() const
+  {
+      return RaceInternal::secondUpdateTypes[this->getID()];
   }
   UnitType Race::getUpdateBasic() const
   {

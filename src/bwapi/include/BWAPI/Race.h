@@ -85,7 +85,13 @@ namespace BWAPI
 
       UnitType getSecondInfantery() const;
 
+      UnitType getThreeInfantery() const;
+
       UnitType getBasicArmyBuilding() const;
+
+      UnitType getBuildTemplar() const;
+
+      UnitType getSecondUpdate() const;
 
       UnitType getUpdateBasic() const;
 
