@@ -1,7 +1,6 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
-#include <unordered_set>
 
 StarterBot::StarterBot()
 {
