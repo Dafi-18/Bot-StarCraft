@@ -1,6 +1,7 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
+#include <unordered_set>
 
 StarterBot::StarterBot()
 {
@@ -109,8 +110,6 @@ void StarterBot::sendIdleWorkersToMinerals()
         }
     }
 }
-
-
 
 
 void StarterBot::sendIdleWorkersToRefineries()
@@ -303,74 +302,65 @@ void StarterBot::AttackZealots()
 
     static int zealotCount = 0; // Contador total de Zealots que han atacado
     static int aliveZealotCount = 0; // Contador de Zealots vivos en el grupo actual
-    static BWAPI::TilePosition tilestartLocation = BWAPI::Broodwar->self()->getStartLocation(); // Punto de inicio
-    static BWAPI::Position startLocation(tilestartLocation);
-    static bool attackingEnemyBase = false; // Indica si estamos atacando la base enemiga
+    static int zealotsSentToAttack = 0; // Contador de Zealots enviados a atacar
 
-    // Encuentra la posición objetivo, que es la base enemiga más lejana de las dos coordenadas
-    BWAPI::Position enemyBase;
-    double maxDistance = 0;
-    double distance1 = startLocation.getDistance(BWAPI::Position(320, 3264));
-    double distance2 = startLocation.getDistance(BWAPI::Position(3264, 320));
+    // Encuentra las coordenadas de inicio del enemigo (simétricas)
+    static BWAPI::TilePosition tilestartLocation = BWAPI::Broodwar->self()->getStartLocation();
+    static BWAPI::Position startLocation(tilestartLocation); // Posición de inicio
+    static BWAPI::Position enemyBase;
+    static bool enemyBaseSet = false;
 
-    if (distance1 > distance2) {
-        enemyBase = BWAPI::Position(320, 3264);
+    if (!enemyBaseSet) {
+        double maxDistance = 0;
+        double distance1 = startLocation.getDistance(BWAPI::Position(320, 3264));
+        double distance2 = startLocation.getDistance(BWAPI::Position(3264, 320));
+
+        if (distance1 > distance2) {
+            enemyBase = BWAPI::Position(320, 3264);
+        }
+        else {
+            enemyBase = BWAPI::Position(3264, 320);
+        }
+        enemyBaseSet = true;
     }
-    else {
-        enemyBase = BWAPI::Position(3264, 320);
-    }
 
-    // Realiza el movimiento y el ataque en grupos de 20
+    // Contador de Zealots vivos en el grupo actual
+    int aliveZealotsInGroup = 0;
+
+    // Realiza el movimiento y el ataque
     for (auto& unit : myUnits)
     {
         if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot)
         {
-            // Verifica si hay enemigos cerca de la posición de inicio y ataca si los encuentra
-            if (attackingEnemyBase)
-            {
-                BWAPI::Unit closestEnemyNearBase = Tools::GetClosestUnitTo(unit, enemyUnits);
-                if (closestEnemyNearBase) {
-                    unit->attack(closestEnemyNearBase);
-                }
-            }
-            else
-            {
-                // Verifica si hay enemigos en el camino hacia la posición de inicio
-                BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+            // Verifica si hay enemigos en el camino hacia la posición
+            BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
 
-                // Si quedan menos de 20 Zealots vivos y no están atacando, regresan al punto de inicio
-                if (aliveZealotCount < 10 && !unit->isAttacking() && !attackingEnemyBase)
-                {
-                    unit->rightClick(startLocation);
-                    aliveZealotCount = 0; // Reinicia el contador
-                }
-                else if (closestEnemy) {
-                    unit->attack(closestEnemy);
-                }
-                else {
-                    if (aliveZealotCount > 10) {
-                        // Si tienes más de 10 Zealots agrupados, cambia a atacar la base enemiga
-                        unit->attack(enemyBase);
-                        attackingEnemyBase = true;
-                    }
-                    else {
-                        unit->rightClick(startLocation);
-                    }
-                }
+            if (closestEnemy) {
+                unit->attack(closestEnemy, true);
+            }
+            else {
+                unit->attack(enemyBase, true);
             }
 
-            // Incrementa el contador de Zealots vivos
-            aliveZealotCount++;
+            // Contador de Zealots vivos en el grupo actual
+            if (unit->exists()) {
+                aliveZealotsInGroup++;
+            }
+        }
+    }
 
-            // Si hay 20 Zealots en el grupo, reinicia el contador y continúa con el siguiente grupo
-            if (aliveZealotCount >= 10)
+    // Si no hay suficientes Zealots vivos en el grupo, agrúpalos en tu base
+    if (aliveZealotsInGroup < 10) {
+        for (auto& unit : myUnits)
+        {
+            if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot && !unit->isAttacking())
             {
-                aliveZealotCount = 0;
+                BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
+                unit->rightClick(BWAPI::Position(myBaseTile));
             }
         }
     }
 }
-
 
 
 // Draw some relevent information to the screen to help us debug the bot
