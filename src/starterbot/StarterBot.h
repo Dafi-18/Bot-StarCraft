@@ -27,6 +27,7 @@ public:
 	void trainDragoons();
 	void buildForge();
 	void buildPhotonCannon();
+	void ResetAttackLogicIfNeeded();
 
 
 

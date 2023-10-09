@@ -51,12 +51,12 @@ void StarterBot::onFrame()
     // Build a barrack or a gateway
     buildBasicArmyBuilding();
 
+    buildForge();
+
     // Build para extraer gas vespeno
     buildAssimilator();
 
     sendIdleWorkersToRefineries();
-
-    buildForge();
 
     buildUpdateBasic();
 
@@ -71,6 +71,9 @@ void StarterBot::onFrame()
 
     //Attack Dragoons
     AttackDragoons();
+
+    // Reset attack logic if needed
+    ResetAttackLogicIfNeeded();
 
     // Draw unit health bars, which brood war unfortunately does not do
     Tools::DrawUnitHealthBars();
@@ -118,9 +121,6 @@ void StarterBot::sendIdleWorkersToMinerals()
         }
     }
 }
-
-
-
 
 void StarterBot::sendIdleWorkersToRefineries()
 {
@@ -210,6 +210,7 @@ void StarterBot::buildAdditionalSupply()
     {
         BWAPI::Broodwar->printf("Started Building %s", supplyProviderType.getName().c_str());
     }
+
 }
 
 void StarterBot::trainInfantery()
@@ -236,25 +237,30 @@ void StarterBot::trainDragoons()
 {
     const BWAPI::UnitType dragoonType = BWAPI::Broodwar->self()->getRace().getSecondInfantery();
     const BWAPI::UnitType gatewayType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
-    const BWAPI::UnitType zealotType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
+
+    const BWAPI::UnitType zealogsType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
+    const int zealogsWanted = 15;
+    const int zealogsOwned = Tools::CountUnitsOfType(zealogsType, BWAPI::Broodwar->self()->getUnits());
 
 
-    // Verificar recursos disponibles
-    const int minerals = BWAPI::Broodwar->self()->minerals();
-    const int gas = BWAPI::Broodwar->self()->gas();
+    if (zealogsWanted < zealogsOwned) {
+        // Verificar recursos disponibles
+        const int minerals = BWAPI::Broodwar->self()->minerals();
+        const int gas = BWAPI::Broodwar->self()->gas();
 
-    const int requiredMinerals = dragoonType.mineralPrice();
-    const int requiredGas = dragoonType.gasPrice();
+        const int requiredMinerals = dragoonType.mineralPrice();
+        const int requiredGas = dragoonType.gasPrice();
 
 
-    // Check if you have enough resources to train a dragoon
-    if (minerals >= requiredMinerals && gas >= requiredGas) {
-        // Find a gateway that can train dragoons
-        BWAPI::Unit myGateway = Tools::GetAvailableTrainingBuilding(gatewayType);
+        // Check if you have enough resources to train a dragoon
+        if (minerals >= requiredMinerals && gas >= requiredGas) {
+            // Find a gateway that can train dragoons
+            BWAPI::Unit myGateway = Tools::GetAvailableTrainingBuilding(gatewayType);
 
-        // If you have a valid gateway, train a dragoon
-        if (myGateway && !myGateway->isTraining()) {
-            myGateway->train(dragoonType);
+            // If you have a valid gateway, train a dragoon
+            if (myGateway && !myGateway->isTraining()) {
+                myGateway->train(dragoonType);
+            }
         }
     }
 }
@@ -411,7 +417,8 @@ void StarterBot::AttackZealots()
     }
 
     // Contador de Zealots vivos en el grupo actual
-    int aliveZealotsInGroup = 0;
+    const BWAPI::UnitType zealotsType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
+    const int aliveZealotsInGroup = Tools::CountUnitsOfType(zealotsType, BWAPI::Broodwar->self()->getUnits());
 
     // Realiza el movimiento y el ataque
     for (auto& unit : myUnits)
@@ -419,6 +426,7 @@ void StarterBot::AttackZealots()
         if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot)
         {
             // Verifica si hay enemigos en el camino hacia la posición
+            const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
             BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
 
             if (closestEnemy) {
@@ -428,10 +436,6 @@ void StarterBot::AttackZealots()
                 unit->attack(enemyBase, true);
             }
 
-            // Contador de Zealots vivos en el grupo actual
-            if (unit->exists()) {
-                aliveZealotsInGroup++;
-            }
         }
     }
 
@@ -439,16 +443,22 @@ void StarterBot::AttackZealots()
     if (aliveZealotsInGroup < 10) {
         for (auto& unit : myUnits)
         {
-            if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot && !unit->isAttacking())
-            {
-                BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
-                unit->rightClick(BWAPI::Position(myBaseTile));
-                BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+            if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
 
-                if (closestEnemy) {
-                    unit->attack(closestEnemy, true);
+                if (!unit->isAttacking()) {
+                    BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
+                    unit->rightClick(BWAPI::Position(myBaseTile));;
                 }
-            }
+                else 
+                {
+                    const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+					BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+                    if (closestEnemy) {
+						unit->attack(closestEnemy, true);
+					}
+
+                }
+            } 
         }
     }
 }
@@ -483,7 +493,8 @@ void StarterBot::AttackDragoons()
     }
 
     // Contador de Zealots vivos en el grupo actual
-    int aliveDragoonsInGroup = 0;
+    const BWAPI::UnitType dragoonsType = BWAPI::Broodwar->self()->getRace().getSecondInfantery();
+    const int aliveDragoonsInGroup = Tools::CountUnitsOfType(dragoonsType, BWAPI::Broodwar->self()->getUnits());
 
     // Realiza el movimiento y el ataque
     for (auto& unit : myUnits)
@@ -491,6 +502,7 @@ void StarterBot::AttackDragoons()
         if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon)
         {
             // Verifica si hay enemigos en el camino hacia la posición
+            const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
             BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
 
             if (closestEnemy) {
@@ -499,11 +511,7 @@ void StarterBot::AttackDragoons()
             else {
                 unit->attack(enemyBase, true);
             }
-
-            // Contador de Zealots vivos en el grupo actual
-            if (unit->exists()) {
-                aliveDragoonsInGroup++;
-            }
+ 
         }
     }
 
@@ -511,15 +519,66 @@ void StarterBot::AttackDragoons()
     if (aliveDragoonsInGroup < 10) {
         for (auto& unit : myUnits)
         {
-            if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon && !unit->isAttacking())
-            {
-                BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
-                unit->rightClick(BWAPI::Position(myBaseTile));
-                BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
-
-                if (closestEnemy) {
-                    unit->attack(closestEnemy, true);
+            if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
+                
+                if (!unit->isAttacking()) {
+                    BWAPI::TilePosition myBaseTile = BWAPI::Broodwar->self()->getStartLocation();
+                    unit->rightClick(BWAPI::Position(myBaseTile));;
                 }
+                else
+                {
+                    const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+                    BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+                    if (closestEnemy) {
+                        unit->attack(closestEnemy, true);
+                    }
+
+                }
+            }
+            
+        }
+    }
+}
+
+void StarterBot::ResetAttackLogicIfNeeded()
+{
+    // Definir una ubicación específica de la base enemiga a la que deseas enviar tus unidades
+    // Encuentra las coordenadas de inicio del enemigo (simétricas)
+    static BWAPI::TilePosition tilestartLocation = BWAPI::Broodwar->self()->getStartLocation();
+    static BWAPI::Position startLocation(tilestartLocation); // Posición de inicio
+    static BWAPI::Position enemyBase;
+    static bool enemyBaseSet = false;
+
+    if (!enemyBaseSet) {
+        double maxDistance = 0;
+        double distance1 = startLocation.getDistance(BWAPI::Position(320, 3264));
+        double distance2 = startLocation.getDistance(BWAPI::Position(3264, 320));
+
+        if (distance1 > distance2) {
+            enemyBase = BWAPI::Position(320, 3264);
+        }
+        else {
+            enemyBase = BWAPI::Position(3264, 320);
+        }
+        enemyBaseSet = true;
+    }
+
+    const BWAPI::UnitType zealotsType = BWAPI::Broodwar->self()->getRace().getInfanteryBasic();
+    const int aliveZealots = Tools::CountUnitsOfType(zealotsType, BWAPI::Broodwar->self()->getUnits());
+
+    const BWAPI::UnitType dragoonsType = BWAPI::Broodwar->self()->getRace().getSecondInfantery();
+    const int aliveDragoons = Tools::CountUnitsOfType(dragoonsType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si tienes 20 o más unidades entre Zealots y Dragoons y no se ha dado la orden,
+    // envía las unidades a la ubicación de la base enemiga y marca la bandera como verdadera
+    if (aliveZealots + aliveDragoons >= 20)
+    {
+        // Mueve las unidades a la ubicación de la base enemiga
+        for (auto& unit : BWAPI::Broodwar->self()->getUnits())
+        {
+            if (unit->getType() == zealotsType || unit->getType() == dragoonsType)
+            {
+                unit->attack(enemyBase);
             }
         }
     }

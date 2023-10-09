@@ -73,7 +73,6 @@ BWAPI::Unit Tools::GetAvailableTrainingBuilding(BWAPI::UnitType type)
     return nullptr;
 }
 
-// Attempt tp construct a building of a given type 
 bool Tools::BuildBuilding(BWAPI::UnitType type)
 {
     // Get the type of unit that is required to build the desired building
@@ -88,11 +87,12 @@ bool Tools::BuildBuilding(BWAPI::UnitType type)
     BWAPI::TilePosition desiredPos = BWAPI::Broodwar->self()->getStartLocation();
 
     // Ask BWAPI for a building location near the desired position for the type
-    int maxBuildRange = 64;
+    int maxBuildRange = 5000;
     bool buildingOnCreep = type.requiresCreep();
     BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
     return builder->build(type, buildPos);
 }
+
 
 void Tools::DrawUnitCommands()
 {
