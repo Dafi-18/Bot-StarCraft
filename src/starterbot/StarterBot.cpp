@@ -178,7 +178,7 @@ void StarterBot::sendIdleWorkersToRefineries()
 void StarterBot::trainAdditionalWorkers()
 {
     const BWAPI::UnitType workerType = BWAPI::Broodwar->self()->getRace().getWorker();
-    const int workersWanted = 20;
+    const int workersWanted = 21;
     const int workersOwned = Tools::CountUnitsOfType(workerType, BWAPI::Broodwar->self()->getUnits());
     if (workersOwned < workersWanted)
     {
@@ -271,9 +271,13 @@ void StarterBot::buildBasicArmyBuilding()
     const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
     // Obtener el tipo de edificio (UnitType)
     const BWAPI::UnitType buildingType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+
+
+
     // Para construir este edificio tengo que tener minerales suficientes
     // Obtener la cantidad de minerales
     const int minerals = BWAPI::Broodwar->self()->minerals();
+
 
     //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
     const int requiredMinerales = buildingType.mineralPrice();
@@ -281,7 +285,7 @@ void StarterBot::buildBasicArmyBuilding()
     const int basicArmyBuildingsOwned = Tools::CountUnitsOfType(buildingType, BWAPI::Broodwar->self()->getUnits());
 
     // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
-    if (minerals < requiredMinerales or basicArmyBuildingsOwned == 3) { return; }
+    if (minerals < requiredMinerales or basicArmyBuildingsOwned == 4) { return; }
 
     const bool startedBuilding = Tools::BuildBuilding(buildingType);
     if (startedBuilding)
@@ -315,26 +319,37 @@ void StarterBot::buildUpdateBasic()
 void StarterBot::buildAssimilator()
 {
     const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    
     // Obtener el tipo de edificio (UnitType)
     const BWAPI::UnitType refineryType = BWAPI::Broodwar->self()->getRace().getRefinery();
-    // Para construir este edificio tengo que tener minerales suficientes
+
+
+    const BWAPI::UnitType buildingType = BWAPI::Broodwar->self()->getRace().getBasicArmyBuilding();
+    const int gatewayWanted = 3;
+    const int gatewayOwned = Tools::CountUnitsOfType(buildingType, BWAPI::Broodwar->self()->getUnits());
+
+    if (gatewayOwned >= gatewayWanted) {
+        // Para construir este edificio tengo que tener minerales suficientes
     // Obtener la cantidad de minerales
-    const int minerals = BWAPI::Broodwar->self()->minerals();
+        const int minerals = BWAPI::Broodwar->self()->minerals();
 
-    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
-    const int requiredMinerales = refineryType.mineralPrice();
-    // Obtener la cantidad de edificios hasta el momento.
-    const int refineryOwned = Tools::CountUnitsOfType(refineryType, BWAPI::Broodwar->self()->getUnits());
+        //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+        const int requiredMinerales = refineryType.mineralPrice();
+        // Obtener la cantidad de edificios hasta el momento.
+        const int refineryOwned = Tools::CountUnitsOfType(refineryType, BWAPI::Broodwar->self()->getUnits());
 
-    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
-    if (minerals < requiredMinerales or refineryOwned == 1) { return; }
+        // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+        if (minerals < requiredMinerales or refineryOwned == 1) { return; }
 
-    const bool startedBuilding = Tools::BuildBuilding(refineryType);
-    if (startedBuilding)
-    {
-        BWAPI::Broodwar->printf("Started Building %s", refineryType.getName());
-     
+        const bool startedBuilding = Tools::BuildBuilding(refineryType);
+        if (startedBuilding)
+        {
+            BWAPI::Broodwar->printf("Started Building %s", refineryType.getName());
+
+        }
     }
+
+
 }
 
 void StarterBot::buildPhotonCannon()
