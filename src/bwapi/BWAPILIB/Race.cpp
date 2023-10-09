@@ -63,6 +63,14 @@ namespace BWAPI
       Unknown, None, Unknown // random, none, unk0
     };
 
+    // FIRST UPDATE TYPES
+    static const int firstUpdateTypes[Races::Enum::MAX] =
+    {
+     Zerg_Spawning_Pool, Terran_Engineering_Bay, Protoss_Forge,
+      None, None, None, // unused
+      Unknown, None, Unknown // random, none, unk0
+    };
+
     // Second Infantery TYPES
     static const int dragonTypes[Races::Enum::MAX] = 
     {
@@ -125,6 +133,10 @@ namespace BWAPI
   UnitType Race::getDefenseBasic() const
   {
       return RaceInternal::defenseTypes[this->getID()];
+  }
+  UnitType Race::getFirstUpdate() const
+  {
+      return RaceInternal::firstUpdateTypes[this->getID()];
   }
   UnitType Race::getSecondInfantery() const
   {

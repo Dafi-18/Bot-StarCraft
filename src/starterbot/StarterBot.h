@@ -24,6 +24,8 @@ public:
 	void buildAssimilator();
 	void sendIdleWorkersToRefineries();
 	void trainDragoons();
+	void buildForge();
+	void buildPhotonCannon();
 
 
 

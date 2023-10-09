@@ -57,7 +57,11 @@ void StarterBot::onFrame()
 
     sendIdleWorkersToRefineries();
 
+    buildForge();
+
     trainDragoons();
+
+    buildPhotonCannon();
 
     trainInfantery();
 
@@ -325,6 +329,56 @@ void StarterBot::buildAssimilator()
     {
         BWAPI::Broodwar->printf("Started Building %s", refineryType.getName());
      
+    }
+}
+
+void StarterBot::buildPhotonCannon()
+{
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    // Obtener el tipo de edificio (UnitType)
+    const BWAPI::UnitType defenseType = BWAPI::Broodwar->self()->getRace().getDefenseBasic();
+    // Para construir este edificio tengo que tener minerales suficientes
+    // Obtener la cantidad de minerales
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+    const int requiredMinerales = defenseType.mineralPrice();
+    // Obtener la cantidad de edificios hasta el momento.
+    const int defenseOwned = Tools::CountUnitsOfType(defenseType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+    if (minerals < requiredMinerales or defenseOwned == 2) { return; }
+
+    const bool startedBuilding = Tools::BuildBuilding(defenseType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", defenseType.getName());
+
+    }
+}
+
+void StarterBot::buildForge()
+{
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    // Obtener el tipo de edificio (UnitType)
+    const BWAPI::UnitType forgeType = BWAPI::Broodwar->self()->getRace().getFirstUpdate();
+    // Para construir este edificio tengo que tener minerales suficientes
+    // Obtener la cantidad de minerales
+    const int minerals = BWAPI::Broodwar->self()->minerals();
+
+    //const int requiredMinerales = (raceName = "Zerg" ? 200 : 150);
+    const int requiredMinerales = forgeType.mineralPrice();
+    // Obtener la cantidad de edificios hasta el momento.
+    const int ForgeOwned = Tools::CountUnitsOfType(forgeType, BWAPI::Broodwar->self()->getUnits());
+
+    // Si no tengo suficientes minerales y ya tengo 3 edificios construidos, no hago nada.
+    if (minerals < requiredMinerales or ForgeOwned == 1) { return; }
+
+    const bool startedBuilding = Tools::BuildBuilding(forgeType);
+    if (startedBuilding)
+    {
+        BWAPI::Broodwar->printf("Started Building %s", forgeType.getName());
+
     }
 }
 
