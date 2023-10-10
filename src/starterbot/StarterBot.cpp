@@ -434,7 +434,7 @@ void StarterBot::buildTemplarArchives()
 
 void StarterBot::buildPhotonCannon()
 {
-    /* const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+     const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
     // Obtener el tipo de edificio (UnitType)
     const BWAPI::UnitType defenseType = BWAPI::Broodwar->self()->getRace().getDefenseBasic();
     // Para construir este edificio tengo que tener minerales suficientes
@@ -454,12 +454,12 @@ void StarterBot::buildPhotonCannon()
     {
         BWAPI::Broodwar->printf("Started Building %s", defenseType.getName());
 
-    }*/
+    }
 }
 
 void StarterBot::buildForge()
 {
-    /*const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
+    const std::string raceName = BWAPI::Broodwar->self()->getRace().getName();
     // Obtener el tipo de edificio (UnitType)
     const BWAPI::UnitType forgeType = BWAPI::Broodwar->self()->getRace().getFirstUpdate();
     // Para construir este edificio tengo que tener minerales suficientes
@@ -479,7 +479,7 @@ void StarterBot::buildForge()
     {
         BWAPI::Broodwar->printf("Started Building %s", forgeType.getName());
 
-    }*/
+    }
 }
 
 void StarterBot::AttackZealots()
@@ -745,14 +745,21 @@ void StarterBot::ResetAttackLogicIfNeeded()
     const int aliveTemplars = Tools::CountUnitsOfType(templarsType, BWAPI::Broodwar->self()->getUnits());
     // Si tienes 20 o más unidades entre Zealots y Dragoons y no se ha dado la orden,
     // envía las unidades a la ubicación de la base enemiga y marca la bandera como verdadera
-    if (aliveZealots + aliveDragoons + aliveTemplars >= 20)
+    if (aliveZealots + aliveDragoons + aliveTemplars >= 15)
     {
         // Mueve las unidades a la ubicación de la base enemiga
         for (auto& unit : BWAPI::Broodwar->self()->getUnits())
         {
             if (unit->getType() == zealotsType || unit->getType() == dragoonsType || unit->getType() == templarsType)
             {
-                unit->attack(enemyBase);
+                const BWAPI::Unitset& enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+                BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
+                if (closestEnemy) {
+                    unit->attack(closestEnemy, true);
+                }
+                else {
+					unit->attack(enemyBase, true);
+				}
             }
         }
     }
